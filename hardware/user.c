@@ -33,6 +33,54 @@ void setup() {
     WiFi_Connect();
 }
 
+void _post(bool ck) {
+    if(WiFi.status() == WL_CONECTED) {
+        HTTPCLient http;
+        http.begin(url);
+        http.addHeader("Content-Type", "application/json");
+        JSONPost["statusUser"] = ck;
+        serializeJson(JSONPost, str);
+        int httpCode = http.POST(str);
+
+        if(httpCode == HTTP_CODE_OK) {
+            String payload = http.getString();
+            Serial.println(httpCode);
+            Serial.println(payload);
+        }else {
+            Serial.println(httpCode);
+            Serial.println("ERROR on HTTP Request");
+        }
+    }else {
+        WiFi_Connect();
+    }
+}
+
+void _get() {
+    if(WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+
+        http.begin(url);
+        int httpCode = http.GET();
+        if(httpCode == HTTP_CODE_OK) {
+            String payload = http.getString();
+            DeserilizationError err = deserializeJson(JSONGet, payload);
+            if(err) {
+                Serial.print(F("deserializeJson() failed with code "));
+                Serial.println(err.c_str());
+            }else {
+                Serial.println(httpCode);
+                Serial.print("statusLock: ");
+                Serial.println((bool)JSONGet["statusLock"]);
+            }
+        }else {
+            Serial.println(httpCode);
+            Serial.println("ERROR on HTTP Request");
+        }
+    }else {
+        WiFi_Connect();
+    }
+}
+
 void _get() {
     if(WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
@@ -66,12 +114,15 @@ void loop() {
             servo_user.write(i);
             delay(50);// wait for 50 millisecond(s).
         }
+        JSONGet["statusUser"] = false;
+        _post(false);
     }
     if(analogRead(ldr) < 400) {
         for(int i=90; i>=0; i--) {
             servo_user.write(i);
             delay(50);// wait for 50 millisecond(s).
         }
-        JSONGet["statusUser"] = false;
+        JSONGet["statusUser"] = true;
+        _post(true);
     }
 }
