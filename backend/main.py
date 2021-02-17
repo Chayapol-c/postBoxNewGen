@@ -66,5 +66,30 @@ def locker_status():
     else:
         return {'result': 'unlock'}
 
+@app.route('/user_track', methods = ['POST'])
+def add_track():
+    data = request.json
+    
+    data_insert = {
+        'user': data['user'],
+        'trackID': data['trackID']
+    }
+
+    user_name = {'user': data['user']}
+    cursor = userMongodb.find(user_name)
+
+    output = []
+    for ele in cursor:
+        output = {
+            'user': ele['user'],
+            'trackID': ele['trackID']
+        }
+
+    if len(output) == 0:
+        trackMongodb.insert_one(data_insert)
+        return {'result' : 'add track successful'}
+    else:
+        return {'result' : 'unknow user'}
+
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port='3000', debug=True)
