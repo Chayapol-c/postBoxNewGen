@@ -40,13 +40,20 @@ def create_user():
 @app.route('/check', methods = ['GET'])
 def check_user():
     user_name = request.args.get('User')
-    
-    user_name_data = myCollection.find(user_name_data)
+    filt = {'user': user_name}
+    cursor = myCollection.find(filt)
 
-    if not user_name_data:
-        return {'result': 'found'}
-    else:
+    output = []
+    for ele in cursor:
+        output = {
+            'user': ele['user'],
+            'name': ele['name']
+        }
+
+    if len(output) == 0:
         return {'result': 'the user name does not exist'}
+    else:
+        return {'result': 'found'}
 
 @app.route('/status_locker', methods = ['GET'])
 def locker_status():
