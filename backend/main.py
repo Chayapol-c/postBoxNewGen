@@ -1,8 +1,14 @@
 from flask import Flask, request,jsonify
 from flask_pymongo import PyMongo 
+from os import path, environ
+from os.path import join, dirname
+from dotenv import load_dotenv
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 app = Flask(__name__)
-app.config['MONGO_URI'] = 'mongodb://exceed_group17:9pd9akda@158.108.182.0:2255/exceed_group17'
+app.config['MONGO_URI'] = environ.get("MONGO_URL")
 mongo = PyMongo(app)
 
 myCollection = mongo.db.test
@@ -16,10 +22,16 @@ def create_user():
         'name': data['name']
     }
     user_name = {'user': data['user']}
-    cursor = myCollection.find_one(user_name)
-    results = list(cursor)
+    cursor = myCollection.find(user_name)
 
-    if len(results) == 0:
+    output = []
+    for ele in cursor:
+        output = {
+            'user': ele['user'],
+            'name': ele['name']
+        }
+
+    if len(output) == 0:
         myCollection.insert_one(data_insert)
         return {'result' : 'create successful'}
     else:
