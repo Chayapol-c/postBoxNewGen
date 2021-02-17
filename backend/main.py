@@ -11,7 +11,8 @@ app = Flask(__name__)
 app.config['MONGO_URI'] = environ.get("MONGO_URL")
 mongo = PyMongo(app)
 
-myCollection = mongo.db.test
+userMongodb = mongo.db.user
+trackMongodb = mongo.db.track
 
 @app.route('/create', methods = ['POST']) #create user
 def create_user():
@@ -22,7 +23,7 @@ def create_user():
         'name': data['name']
     }
     user_name = {'user': data['user']}
-    cursor = myCollection.find(user_name)
+    cursor = userMongodb.find(user_name)
 
     output = []
     for ele in cursor:
@@ -32,7 +33,7 @@ def create_user():
         }
 
     if len(output) == 0:
-        myCollection.insert_one(data_insert)
+        userMongodb.insert_one(data_insert)
         return {'result' : 'create successful'}
     else:
         return {'result' : 'this user already create'}
@@ -41,7 +42,7 @@ def create_user():
 def check_user():
     user_name = request.args.get('User')
     filt = {'user': user_name}
-    cursor = myCollection.find(filt)
+    cursor = userMongodb.find(filt)
 
     output = []
     for ele in cursor:
