@@ -19,17 +19,17 @@ def create_user():
     data = request.json
     
     data_insert = {
-        'user': data['user'],
-        'name': data['name']
+        'username': data['username'],
+        'password': data['password']
     }
-    user_name = {'user': data['user']}
+    user_name = {'username': data['username']}
     cursor = userMongodb.find(user_name)
 
     output = []
     for ele in cursor:
         output = {
-            'user': ele['user'],
-            'name': ele['name']
+            'username': ele['username'],
+            'password': ele['password']
         }
 
     if len(output) == 0:
@@ -38,25 +38,29 @@ def create_user():
     else:
         return {'result' : 'this user already create'}
 
-@app.route('/check', methods = ['GET'])
+@app.route('/login', methods = ['GET'])  #login
 def check_user():
-    user_name = request.args.get('User')
-    filt = {'user': user_name}
+    data = request.json
+    filt = {
+        'username': data['username'],
+        'password': data['password']
+        }
+
     cursor = userMongodb.find(filt)
 
     output = []
     for ele in cursor:
         output = {
-            'user': ele['user'],
-            'name': ele['name']
+            'username': ele['username'],
+            'password': ele['password']
         }
 
     if len(output) == 0:
-        return {'result': 'the user name does not exist'}
+        return {'result': 'invalid username or password'}
     else:
-        return {'result': 'found'}
+        return {'result': 'login successful'}
 
-@app.route('/status_locker', methods = ['GET'])
+@app.route('/status_locker', methods = ['GET']) #status
 def locker_status():
     data = request.json
     status = data['lock']
@@ -66,12 +70,13 @@ def locker_status():
     else:
         return {'result': 'unlock'}
 
-@app.route('/user_track', methods = ['POST'])
+@app.route('/user_add_track', methods = ['POST'])
 def add_track():
     data = request.json
     
     data_insert = {
         'user': data['user'],
+        'name': data['name'],
         'trackID': data['trackID']
     }
 
@@ -82,6 +87,7 @@ def add_track():
     for ele in cursor:
         output = {
             'user': ele['user'],
+            'name': data['name'],
             'trackID': ele['trackID']
         }
 
@@ -90,6 +96,8 @@ def add_track():
         return {'result' : 'add track successful'}
     else:
         return {'result' : 'unknow user'}
+
+@app.route('/postman_track', methods = ['GET'])
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port='3000', debug=True)
