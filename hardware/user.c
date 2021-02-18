@@ -1,17 +1,20 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
-#include <Servo.h>
+#include <ESP32Servo.h>
 
 const char* ssid = "Opalnakuuub";
 const char* password = "123456789";
 
 const char* url = "http://158.108.182.23:3000";
 
-int ldr = 32;
-int sv_user = 33;
-
 Servo servo_user;
+Servo servo_postman;
+
+const int sv_user = 21;
+const int sv_postman = 19;
+const int ldr_user = 34;
+const int ldr_postman = 33;
 
 void WiFi_Connect() {
     WiFi.disconnect();
@@ -26,103 +29,30 @@ void WiFi_Connect() {
 }
 
 void setup() {
-    pinMode(ldr, INPUT);
     servo_user.attach(sv_user);
+    servo_postman.attach(sv_postman);
     Serial.begin(9600);
     delay(4000);
-    WiFi_Connect();
-}
-
-void _post(bool ck) {
-    if(WiFi.status() == WL_CONECTED) {
-        HTTPCLient http;
-        http.begin(url);
-        http.addHeader("Content-Type", "application/json");
-        JSONPost["statusUser"] = ck;
-        serializeJson(JSONPost, str);
-        int httpCode = http.POST(str);
-
-        if(httpCode == HTTP_CODE_OK) {
-            String payload = http.getString();
-            Serial.println(httpCode);
-            Serial.println(payload);
-        }else {
-            Serial.println(httpCode);
-            Serial.println("ERROR on HTTP Request");
-        }
-    }else {
-        WiFi_Connect();
-    }
-}
-
-void _get() {
-    if(WiFi.status() == WL_CONNECTED) {
-        HTTPClient http;
-
-        http.begin(url);
-        int httpCode = http.GET();
-        if(httpCode == HTTP_CODE_OK) {
-            String payload = http.getString();
-            DeserilizationError err = deserializeJson(JSONGet, payload);
-            if(err) {
-                Serial.print(F("deserializeJson() failed with code "));
-                Serial.println(err.c_str());
-            }else {
-                Serial.println(httpCode);
-                Serial.print("statusLock: ");
-                Serial.println((bool)JSONGet["statusLock"]);
-            }
-        }else {
-            Serial.println(httpCode);
-            Serial.println("ERROR on HTTP Request");
-        }
-    }else {
-        WiFi_Connect();
-    }
-}
-
-void _get() {
-    if(WiFi.status() == WL_CONNECTED) {
-        HTTPClient http;
-
-        http.begin(url);
-        int httpCode = http.GET();
-        if(httpCode == HTTP_CODE_OK) {
-            String payload = http.getString();
-            DeserilizationError err = deserializeJson(JSONGet, payload);
-            if(err) {
-                Serial.print(F("deserializeJson() failed with code "));
-                Serial.println(err.c_str());
-            }else {
-                Serial.println(httpCode);
-                Serial.print("statusUser: ");
-                Serial.println((bool)JSONGet["statusUser"]);
-            }
-        }else {
-            Serial.println(httpCode);
-            Serial.println("ERROR on HTTP Request");
-        }
-    }else {
-        WiFi_Connect();
-    }
+    WiFi_Connected();
 }
 
 void loop() {
-    _get();
-    if(JSONGet["statusUser"]) {
-        for(int i=0; i<=90; i++) {
-            servo_user.write(i);
-            delay(50);// wait for 50 millisecond(s).
-        }
-        JSONGet["statusUser"] = false;
-        _post(false);
+    //Serial.println(analogRead(ldr_postman), DEC);
+    //delay(1000);
+    // USER
+    if(analogRead(ldr_user) > 600) {
+        servo_user.write(90);
+        delay(500);
+    }else {
+        servo_user.write(0);
+        delay(500);
     }
-    if(analogRead(ldr) < 400) {
-        for(int i=90; i>=0; i--) {
-            servo_user.write(i);
-            delay(50);// wait for 50 millisecond(s).
-        }
-        JSONGet["statusUser"] = true;
-        _post(true);
+    // POSTMAN
+    if(analogRead(ldr_postman) > 600) {
+        servo_postman.write(90);
+        delay(500);
+    }else {
+        servo_postman.write(0);
+        delay(500);
     }
 }
