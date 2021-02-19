@@ -7,7 +7,10 @@ const form = document.querySelector("form")
 
 trackCodeBtn.addEventListener("click", function(e){
     console.log(trackCode.value)
-})
+});
+
+
+
 
 form.addEventListener("submit", function(e){
     e.preventDefault()
@@ -15,7 +18,9 @@ form.addEventListener("submit", function(e){
     const password = e.target.children[1].children[1].value
 
     if(userName && password){
-        console.log(userName, password)
+        const message = document.createElement("div")
+        message.innerHTML = "Invalid Username or Password"
+        console.log(message)
+        form.appendChild(message)
     }
-    
 })
