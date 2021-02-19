@@ -16,8 +16,7 @@ mongo = PyMongo(app)
 
 userMongodb = mongo.db.user
 trackMongodb = mongo.db.track
-lockerUserMongodb = mongo.db.locker_status_postman
-lockerPostmanMongodb = mongo.db.locker_status_user
+lockerStatusMongodb = mongo.db.locker_status
 
 def timestamp():
     fmt = '%Y-%m-%d %H:%M:%S'
@@ -71,17 +70,7 @@ def check_user():
     else:
         return {'result': 'login successful'}
 
-@app.route('/status_locker', methods = ['GET']) #status
-def locker_status():
-    data = request.json
-    status = data['lock']
-
-    if status == True:
-        return {'result': 'lock'}
-    else:
-        return {'result': 'unlock'}
-
-@app.route('/user_add_track', methods = ['POST'])  #user add trackID
+@app.route('/user/track', methods = ['POST'])  #user add trackID
 def add_track():
     data = request.json
     
@@ -107,7 +96,7 @@ def add_track():
     else:
         return {'result' : 'unknown user'}
 
-@app.route('/postman_track', methods = ['PATCH'])
+@app.route('/postman/track', methods = ['PATCH']) #postman sent
 def postman_track():
     data = request.json
 
@@ -139,8 +128,47 @@ def postman_track():
         if(output_track['timestamp'] != 0):
             return {'result': 'this track already sent'}
         trackMongodb.update_one(filt, update_track)
-        lockerPostmanMongodb.update_one(lockerUser, update_locker)
+        lockerStatusMongodb.update_one(lockerUser, update_locker)
         return {'result': 'sent!'}
         
+@app.route('/status', methods = ['GET']) #locker status
+def locker_status():
+    user = request.args.get('user')
+    username = {'username': user}
+    cursor = lockerStatusMongodb.find(username)
+    output = []
+
+    for ele in cursor:
+        output = {
+            'Lock_postman': ele['Lock_postman'],
+            'Lock_user': ele['Lock_user'],
+        }
+    
+    return {
+        'Lock_postman': output['Lock_postman'],
+        'Lock_user': output['Lock_user']
+    }
+    
+@app.route('/status/update', methods = ['POST']) #locker status update
+def locker_update():
+    data = request.json
+    
+    filt = {
+        'username': data['username']
+    }
+    update_status = {'$set': {
+        'Lock_postman': data['Lock_postman'],
+        'Lock_user': data['Lock_user']
+        }
+    }
+
+    lockerStatusMongodb.update_one(filt, update_status)
+
+    return {'result': 'updata succesful'}
+
+@app.route('/user/unlock', methods = ['PATCH'])
+def user_unlock():
+    data = request.json
+    
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port='3000', debug=True)
