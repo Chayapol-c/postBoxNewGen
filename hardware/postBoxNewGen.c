@@ -111,7 +111,7 @@ void loop() {
         servo_postman.write(0);
     }
     if(analogRead(ldr_postman) > 2500) {
-        servo_postman.write(90);//LOCK
+        servo_postman.write(90);//auto LOCK
         delay(500);
         _post(1, true);
     }
@@ -121,9 +121,18 @@ void loop() {
         servo_user.write(0);
     }
     if(analogRead(ldr_user) > 2500) {
-        servo_user.write(90); // lock
+        servo_user.write(90); // auto lock
         delay(500);
         _post(0, true);
     }
     delay(5000);
+    //add when user command lock box_user but ldr is not nessery from this system. !!!
+    /*
+    if(!get_user) {
+        servo_user.write(0);
+    }else {
+        servo_user.write(90);
+    }
+    */
+    
 }
