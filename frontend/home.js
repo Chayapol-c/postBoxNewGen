@@ -64,7 +64,6 @@ const createTable = (name, code, time) => {
     const delBtn = newRow.querySelector("button");
     delBtn.classList.add("invisible");
   });
-
   // Add a new row into table
   if (columnName || columnCode || columnTime) {
     table.appendChild(newRow);
@@ -73,7 +72,7 @@ const createTable = (name, code, time) => {
 
 // Delete btn handler
 table.addEventListener("click", function (e) {
-  const currRow = table.querySelector("tr");
+  const currRow = e.target.closest("tr");
   const columns = currRow.querySelectorAll("td");
   const name = columns[0].textContent;
   const code = columns[1].textContent;
@@ -89,6 +88,7 @@ table.addEventListener("click", function (e) {
         ele.localSupplyTime === time
       ) {
         delData.splice(index, 1);
+        console.log("delete one")
       }
     });
     localStorage.setItem("userDetail", JSON.stringify(delData));
