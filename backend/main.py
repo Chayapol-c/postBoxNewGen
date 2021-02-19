@@ -11,6 +11,7 @@ dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 app = Flask(__name__)
+CORS(app)
 app.config['MONGO_URI'] = environ.get("MONGO_URL")
 mongo = PyMongo(app)
 
@@ -30,7 +31,8 @@ def create_user():
     
     data_insert = {
         'username': data['username'],
-        'password': data['password']
+        'password': data['password'],
+        'ID_line': 0
     }
     user_name = {'username': data['username']}
     cursor = userMongodb.find(user_name)
@@ -80,7 +82,6 @@ def add_track():
         'trackID': data['trackID'],
         'timestamp': 0
     }
-
     user_name = {'username': data['username']}
     cursor = userMongodb.find(user_name)
 
@@ -117,21 +118,20 @@ def postman_track():
             'username': ele['username']
         }
 
-    lockerUser = {'username': output_user['username']}
-
     update_track = {'$set': {'timestamp': timestamp()}}
     update_locker = {'$set': {'Lock_postman': False}}
 
     if len(output_track) == 0:
         return {'result': 'invalid trackID'}
     else:
+        lockerUser = {'username': output_user['username']}
         if(output_track['timestamp'] != 0):
             return {'result': 'this track already sent'}
         trackMongodb.update_one(filt, update_track)
         lockerStatusMongodb.update_one(lockerUser, update_locker)
         return {'result': 'sent!'}
         
-@app.route('/status', methods = ['GET']) #locker status
+@app.route('/status', methods = ['GET']) #status 
 def locker_status():
     user = request.args.get('user')
     username = {'username': user}
@@ -144,6 +144,11 @@ def locker_status():
             'Lock_user': ele['Lock_user'],
         }
     
+    print(len(output))
+
+    if len(output) == 0:
+        return {'result': 'invalid user'}
+
     return {
         'Lock_postman': output['Lock_postman'],
         'Lock_user': output['Lock_user']
@@ -157,18 +162,56 @@ def locker_update():
         'username': data['username']
     }
     update_status = {'$set': {
-        'Lock_postman': data['Lock_postman'],
-        'Lock_user': data['Lock_user']
+        'Lock_postman': bool(data['Lock_postman']),
+        'Lock_user': bool(data['Lock_user'])
         }
     }
 
     lockerStatusMongodb.update_one(filt, update_status)
 
-    return {'result': 'updata succesful'}
+    return {'result': 'update succesful'}
 
-@app.route('/user/unlock', methods = ['PATCH'])
-def user_unlock():
-    data = request.json
-    
+@app.route('/user/unlock', methods = ['PATCH']) #user unlock 
+def user_locker_unlock():
+    lineID = request.args.get('ID_line')
+
+    filt = {'ID_line': lineID}
+    cursor = userMongodb.find(filt)
+
+    output_user = []
+
+    for ele in cursor:
+        output_user = {
+            'username': ele['username']
+        }
+    user = {'username': output_user['username']}
+    curosr_locker = lockerStatusMongodb.find(user)
+    update_locker = {'$set': {'Lock_user': False}}
+
+    lockerStatusMongodb.update_one(user, update_locker)
+
+    return {'result': 'unlock'}
+
+@app.route('/user/lock', methods = ['PATCH']) #user lock
+def user_locker_lock(): 
+    lineID = request.args.get('ID_line')
+
+    filt = {'ID_line': lineID}
+    cursor = userMongodb.find(filt)
+
+    output_user = []
+
+    for ele in cursor:
+        output_user ={
+            'username': ele['username']
+        }
+    user = {'username': output_user['username']}
+    curosr_locker = lockerStatusMongodb.find(user)
+    update_locker = {'$set': {'Lock_user': True}}
+
+    lockerStatusMongodb.update_one(user, update_locker)
+
+    return {'result': 'lock'}
+
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port='3000', debug=True)
+    app.run(host='0.0.0.0', port='3001', debug=True)
