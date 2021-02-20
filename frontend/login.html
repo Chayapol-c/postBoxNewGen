@@ -20,12 +20,12 @@
     <div class="position-absolute top-0 bg-primary vh-100 vw-100" style="z-index: -999;"></div>
     <div class="container-fluid w-100 h-100 d-flex justify-content-center align-items-center">
         <div class="container w-25 h-50 bg-white rounded-3 shadow-lg px-5 py-5">
-            <div class="row">
-                <div class="col">
+            <div class="row justify-content-center">
+                <div class="col-auto">
                     <h1> Log In</h1>
                 </div>
             </div>
-            <div class="row">
+            <div class="row align-items-center">
                 <div class="col">
                     <form class="fs-3 rounded " id="user-form">
                         <div class="mb-3">
@@ -37,9 +37,14 @@
                             <label for="exampleInputPassword1" class="form-label">Password</label>
                             <input type="password" class="form-control" id="InputPassword1" placeholder="password">
                         </div>
-                        <button type="submit" class="btn btn-info text-white" id="login--btn">login</button>
-                        <p class="fs-5 mt-4">Already have an account? <a id="signup" class="">Sign Up</a></pc>
+                        <button type="submit" class="btn btn-info text-white fs-4 mt-3" id="login--btn" style="width: 100%; background: linear-gradient(to left, #e66465, #9198e5); border: 0;">login</button>
+                        <p class="fs-5 mt-4">Don't have an account? <a id="signup" class="">Sign Up</a></pc>
                     </form>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-auto">
+                    <p class="invisible fs-4" style="color: red;" id="message">Invalid Username or Password</p>
                 </div>
             </div>
         </div>
