@@ -22,5 +22,5 @@ pip install -r requirement.txt
 
 start Flask server using command
 ```
-python3 app.py
+python3 main.py
 ```
