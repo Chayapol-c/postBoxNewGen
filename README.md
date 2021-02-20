@@ -12,7 +12,7 @@
 |   Flask    |   1.1.2 or higher   |
 
 
-Update your `pip` command.
+Update your `pip` version.
 ```
 python3 -m pip install --upgrade pip
 ```
