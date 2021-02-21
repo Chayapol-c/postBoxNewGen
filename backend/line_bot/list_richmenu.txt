@@ -1,0 +1,2 @@
+default for no setup = "richmenu-2b3e41c39ed092564a90af5089f37c6c"
+for rich people only = "richmenu-9743d3cd9bde1b5d4cf20b0d2909e6f2"
