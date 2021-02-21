@@ -36,44 +36,38 @@ def create_user():
     
     data_insert = {
         'username': data['username'],
-        'password': data['password'],
+        'password': generate_password_hash(data['password'], method='sha256'),
         'ID_line': 0
     }
+
     user_name = {'username': data['username']}
-    cursor = userMongodb.find(user_name)
+    cursor = userMongodb.find_one(user_name)
 
-    output = []
-    for ele in cursor:
-        output = {
-            'username': ele['username'],
-            'password': ele['password']
-        }
+    inser_data = {
+        'username': user_name['username'],
+        'Lock_postman': True,
+        'Lock_user': True
+    }
 
-    if len(output) == 0:
+    if not cursor:
         userMongodb.insert_one(data_insert)
+        lockerStatusMongodb.insert_one(inser_data)
         return {'result' : 'create successful'}
     else:
         return {'result' : 'this user already exist'}
 
-@app.route('/login', methods = ['GET'])  #login
+@app.route('/login', methods = ['POST'])  #login
 def check_user():
     data = request.json
     filt = {
         'username': data['username'],
-        'password': data['password']
         }
+    cursor = userMongodb.find_one(filt)
 
-    cursor = userMongodb.find(filt)
-
-    output = []
-    for ele in cursor:
-        output = {
-            'username': ele['username'],
-            'password': ele['password']
-        }
-
-    if len(output) == 0:
-        return {'result': 'invalid username or password'}
+    if not cursor:
+        return {'result': 'invalid username'}
+    if not check_password_hash(cursor['password'],data['password']):
+        return {'result': 'wrong password'}
     else:
         return {'result': 'login successful'}
 
@@ -88,19 +82,58 @@ def add_track():
         'timestamp': 0
     }
     user_name = {'username': data['username']}
-    cursor = userMongodb.find(user_name)
+    cursor = userMongodb.find_one(user_name)
+    track_id = {'trackID': data['trackID']}
+    cursor_track = trackMongodb.find_one(track_id)
 
-    output = []
-    for ele in cursor:
-        output = {
-            'username': ele['username'],
-        }
-
-    if len(output) == 1:
+    if not cursor:
+        return {'result': 'unknown user'}
+    if cursor_track:
+        return {'result': 'this track already added'}
+    else:
         trackMongodb.insert_one(data_insert)
         return {'result' : 'add track successful'}
+
+@app.route('/user/track', methods = ['GET']) #get user trackID
+def get_track():
+    user = request.args.get('user')
+
+    filt ={
+        'username': user
+    }
+
+    output = []
+    cursor = trackMongodb.find(filt).sort('timestamp', -1)
+
+    for ele in cursor:
+        output.append({
+            'username': ele['username'],
+            'name': ele['name'],
+            'trackID': ele['trackID'],
+            'timestamp': ele['timestamp']
+        })
+
+    if len(output) == 0:
+        return {'result': 'invalid username or mai mee track'}
+    return {'result': output}
+
+@app.route('/user/track', methods = ['DELETE']) #user delete track
+def delete_track():
+    data = request.json
+
+    filt = {
+        'trackID': data['trackID']
+    } 
+
+    cursor = trackMongodb.find_one(filt)
+    output = []
+
+    if not cursor:
+        return {'result': 'mai mee track nee u'}
     else:
-        return {'result' : 'unknown user'}
+        filt_delete = {'trackID': cursor['trackID']}
+        trackMongodb.delete_one(filt_delete)
+        return {'result': 'delete successful'}
 
 @app.route('/postman/track', methods = ['PATCH']) #postman sent
 def postman_track():
@@ -134,6 +167,9 @@ def postman_track():
             return {'result': 'this track already sent'}
         trackMongodb.update_one(filt, update_track)
         lockerStatusMongodb.update_one(lockerUser, update_locker)
+
+        url = 'https://exceed17.cpsk-club.xyz/message?user='+output_user['username']
+        requests.get(url)
         return {'result': 'sent!'}
         
 @app.route('/status', methods = ['GET']) #status 
@@ -148,8 +184,6 @@ def locker_status():
             'Lock_postman': ele['Lock_postman'],
             'Lock_user': ele['Lock_user'],
         }
-    
-    print(len(output))
 
     if len(output) == 0:
         return {'result': 'invalid user'}
@@ -158,23 +192,6 @@ def locker_status():
         'Lock_postman': output['Lock_postman'],
         'Lock_user': output['Lock_user']
     }
-    
-@app.route('/status/update', methods = ['POST']) #locker status update
-def locker_update():
-    data = request.json
-    
-    filt = {
-        'username': data['username']
-    }
-    update_status = {'$set': {
-        'Lock_postman': bool(data['Lock_postman']),
-        'Lock_user': bool(data['Lock_user'])
-        }
-    }
-
-    lockerStatusMongodb.update_one(filt, update_status)
-
-    return {'result': 'update succesful'}
 
 @app.route('/user/unlock', methods = ['PATCH']) #user unlock 
 def user_locker_unlock():
@@ -217,6 +234,56 @@ def user_locker_lock():
     lockerStatusMongodb.update_one(user, update_locker)
 
     return {'result': 'lock'}
+
+@app.route('/status/update', methods = ['POST']) #locker status update
+def locker_update():
+    data = request.json
+    
+    filt = {
+        'username': data['username']
+    }
+    update_status = {'$set': {
+        'Lock_postman': bool(data['Lock_postman']),
+        'Lock_user': bool(data['Lock_user'])
+        }
+    }
+
+    lockerStatusMongodb.update_one(filt, update_status)
+
+    return {'result': 'update succesful'}
+
+@app.route('/count', methods = ['GET'])
+def count_date():
+    username = request.args.get('user')
+    m = request.args.get('m')
+    filt = {'username': username}
+
+    data = trackMongodb.find(filt).sort('timestamp')
+    
+    output = []
+    for ele in data:
+        if(str(ele['timestamp']) != '0'):
+            output.append({
+                'year': ele['timestamp'][0:4],
+                'month': ele['timestamp'][5:7],
+                'date': ele['timestamp'][8:10]
+            })
+
+    arr = np.zeros((12, 31))
+
+    for a in output:
+        arr[int(a['month'])][int(a['date'])] += 1
+
+    result = []
+    for i in range(31):
+        if arr[int(m)][i] != 0:
+            result.append(str(i)+","+str(arr[int(m)][i]))
+
+    if len(result) == 0:
+        return {'result': [{}]}
+    else:
+        return {'result': result}
+    
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port='3001', debug=True)
