@@ -23,7 +23,15 @@ signupbtn.addEventListener("click", function(e){
       .then((res) => res.json())
       .then((data) => {
         console.log(data)
-        window.location.href = "landing_page.html"
+        if(data.result === "this user already exist"){
+          const message = document.querySelector("#message");
+          message.classList.remove("invisible")
+          window.setTimeout(()=> {
+            message.classList.add("invisible")
+          }, 2000)
+        }else{
+          window.location.href = "landing_page.html"
+        }
       })
       .catch((err) => console.log(err))
     }
