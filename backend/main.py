@@ -6,6 +6,9 @@ from flask_cors import CORS
 from os import environ
 from os.path import join, dirname
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
+import numpy as np
+import requests
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
