@@ -2,7 +2,8 @@
 
 const submitBtn = document.querySelector("#save-supply");
 const table1 = document.querySelector(".table--body1");
-const status = document.querySelector("#box-status");
+const upperStatus = document.querySelector("#upper-box-status");
+const lowerStatus = document.querySelector("#lower-box-status");
 const currUser = JSON.parse(localStorage.getItem("userData")).username;
 
 window.addEventListener("load", function () {
@@ -19,10 +20,16 @@ window.addEventListener("load", function () {
     .then((res) => res.json())
     .then((data) => {
       if (data.Lock_postman) {
-        status.style.color = "red";
+        upperStatus.style.color = "red";
       } else {
-        status.style.color = "green";
-        status.textContent = "Unlock";
+        upperStatus.style.color = "green";
+        upperStatus.textContent = "Unlock";
+      }
+      if(data.Lock_user){
+        lowerStatus.style.color = "red";
+      }else{
+        lowerStatus.style.color = "green";
+        lowerStatus.textContent = "Unlock";
       }
     })
     .catch((err) => console.log(err));
@@ -87,7 +94,7 @@ const createTable1 = (name, code, time) => {
   });
   // Add a new row into table
   if ((columnName || columnCode) && columnTime.innerHTML !== "delivered") {
-    table1.appendChild(newRow);
+    table1.insertBefore(newRow, table1.firstChild);
   }
 };
 

@@ -23,9 +23,9 @@ signupbtn.addEventListener("click", function(e){
       .then((res) => res.json())
       .then((data) => {
         console.log(data)
+        window.location.href = "landing_page.html"
       })
       .catch((err) => console.log(err))
-      window.location.href = "landing_page.html"
     }
     
 
