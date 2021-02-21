@@ -11,8 +11,8 @@ const int _size = 2 * JSON_OBJECT_SIZE(2);
 StaticJsonDocument<_size> JSONGet;
 StaticJsonDocument<_size> JSONPost;
 
-const char* url_get = "http://158.108.182.23:3000/status?user=yooo";
-const char* url_post = "http://158.108.182.23:3000/status/update";
+const char* url_get = "http://158.108.182.23:3001/status?user=yooo";
+const char* url_post = "http://158.108.182.23:3001/status/update";
 
 Servo servo_user;
 Servo servo_postman;
@@ -20,10 +20,10 @@ Servo myservo;
 
 const int sv_user = 21;
 const int sv_postman = 19;
-const int sv_my = 18;
+const int sv_my = 22;
 const int ldr_postman = 34;
 
-int check;
+int check = 1;
 
 bool get_user, get_postman;
 
@@ -63,20 +63,14 @@ void _get() {
     }
 }
 
-void _post(int sw, bool status) {
+void _post(bool status) {
     if(WiFi.status() == WL_CONNECTED) {
         HTTPClient http;
         http.begin(url_post);
-        http.addHeader("Content-Type", "application/json");
-        if(sw == 0) {
-            JSONPost["username"] = "yooo";
-            JSONPost["Lock_user"] = status;
-            JSONPost["Lock_postman"] = get_postman;
-        }else {
-            JSONPost["username"] = "yooo";
-            JSONPost["Lock_postman"] = status;
-            JSONPost["Lock_user"] = get_user;
-        }
+        http.addHeader("Content-Type", "application/json");        
+        JSONPost["username"] = "yooo";
+        JSONPost["Lock_postman"] = status;
+        JSONPost["Lock_user"] = get_user;
         Serial.println(str);
         serializeJson(JSONPost, str);
         int httpCode = http.POST(str);
@@ -101,54 +95,52 @@ void setup() {
     myservo.attach(sv_my);
     servo_user.write(90);
     servo_postman.write(90);
-    Serial.begin(9600);
+    myservo.write(90);
+    Serial.begin(230400);
     delay(4000);
     WiFi_Connect();
 }
 
 void loop() {
     _get();
+    delay(1000);
     Serial.println(analogRead(ldr_postman), DEC);
+    Serial.println(check);
     delay(1000);
     // POSTMAN
+    servo_postman.attach(sv_postman);
     if(!get_postman) {
-        servo_postman.write(0);
         check = 0;
+        Serial.print("in: ");
+        Serial.println(check);
+        delay(100);
+        servo_postman.write(0);
+        delay(100);
     }
-    if(analogRead(ldr_postman) > 2500) {
+    if(analogRead(ldr_postman) > 2200 && check == 0) {
+        check = 1;
         servo_postman.write(90);//auto LOCK
-        delay(500);
-        _post(1, true);
-        if(check == 0) {
-            int pos = 0;
-            for(pos = 0; pos < 180; pos++) {
-                myservo.write(pos);
-                delay(100);
-            }
-            for(pos = 180; pos > 0; pos--) {
-                myservo.write(pos);
-                delay(100);
-            }
-            check = 1;
-        }
+        delay(15);
+        myservo.write(180);
+        delay(2200);
+        myservo.write(0);
+        delay(2200);
+        myservo.detach();
+        delay(5000);
+        _post(true);
+        delay(100000); 
     }
     
     //USER
     if(!get_user) {
         servo_user.write(0);
+        delay(15);
     }else {
         servo_user.write(90);
-        _post(0, true);
+        delay(15);
+        
     }
     
     delay(5000);
-    //add when user command lock box_user but ldr is not nessery from this system. !!!
-    /*
-    if(!get_user) {
-        servo_user.write(0);
-    }else {
-        servo_user.write(90);
-    }
-    */
     
 }

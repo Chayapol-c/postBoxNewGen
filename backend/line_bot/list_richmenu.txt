@@ -1,0 +1,2 @@
+default for no setup = "richmenu-c3c2fdf3db15434d3ed21d7e8ee7f882"
+for rich postbox user only = "richmenu-a7884105185a3657f40829948dfe8c8f"

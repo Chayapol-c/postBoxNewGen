@@ -1,14 +1,9 @@
-from flask import Flask, request,jsonify
-from flask_pymongo import PyMongo 
-import pymongo
-from datetime import tzinfo, timedelta, datetime
+from flask import Flask, request
+from flask_pymongo import PyMongo
+from datetime import datetime
 from time import time
 from flask_cors import CORS
-import requests
-from werkzeug.security import generate_password_hash, check_password_hash
-from array import *
-import numpy as np
-from os import path, environ
+from os import environ
 from os.path import join, dirname
 from dotenv import load_dotenv
 

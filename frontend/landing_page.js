@@ -9,10 +9,9 @@ const signup = document.querySelector("#signup-btn");
 
 trackCodeBtn.addEventListener("click", function (e) {
   const code = {
-    trackID: trackCode.value,
-    timestamp: Date.now()
+    trackID: trackCode.value
   };
-  console.log(code);
+  console.log(JSON.stringify(code))
   fetch("http://158.108.182.23:3001/postman/track", {
     headers: {
       "Content-Type": "application/json",
@@ -23,8 +22,19 @@ trackCodeBtn.addEventListener("click", function (e) {
     .then((res) => res.json())
     .then((data) => console.log(data.result))
     .catch((err) => console.log(err));
-  message.classList.remove("invisible");
-  window.setTimeout(message.classList.add("invisible"), 2000);
+
+  message.classList.remove("invisible")
+  if(trackCode.value){
+    message.innerHTML = "code sent"
+  }
+  else{
+    message.innerHTML = "input code"
+  }
+  window.setTimeout(() => {
+    message.classList.add("invisible")
+  }, 2000);
+  trackCode.value= ""
+              
 });
 
 signup.addEventListener("mouseover", function () {
