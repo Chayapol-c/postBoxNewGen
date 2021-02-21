@@ -63,7 +63,9 @@ const renderGraph = (fetchedData) => {
       },
     ],
   });
-  chart.render();
+  window.setInterval(()=>{
+    chart.render();
+  }, 2000)
 };
 
 window.onload = getData()
